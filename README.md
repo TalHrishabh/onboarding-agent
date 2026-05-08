@@ -83,36 +83,43 @@ Developer says "start"
 After exploring a flow, the agent produces:
 
 ```markdown
-### Flow: User Cancels Subscription
+### Flow: User Places Order
 
-**What happens:** User confirms cancellation, server calls Commerce Services, subscription is cancelled.
-**Trigger:** Click "Cancel" on /cancel/offer page
-**Entry point:** `src/app/cancel/offer/page.tsx` → `handleCancel()`
+**What happens:** User submits order, server validates payment, creates order in DB, sends confirmation.
+**Trigger:** Click "Place Order" on /checkout page
+**Entry point:** `src/pages/checkout.tsx` → `handleSubmit()`
 
 #### Call Chain
 
 ┌─ USER ACTION ──────────────────────────────────────────┐
-│ Clicks "Cancel anyway" button                           │
+│ Clicks "Place Order" button on checkout page            │
 └────────────────────────────────┬───────────────────────┘
                                  │
                                  ▼
-┌─ LAYER: Client Component ─────────────────────────────┐
-│ File: `src/app/cancel/offer/page.tsx`                  │
-│ Function: `handleCancel()`                             │
-│ Does: calls cancelAction() server action               │
+┌─ LAYER: Frontend ─────────────────────────────────────┐
+│ File: `src/pages/checkout.tsx`                          │
+│ Function: `handleSubmit()`                             │
+│ Does: validates form → calls createOrder API            │
 └────────────────────────────────┬───────────────────────┘
                                  │
                                  ▼
-┌─ LAYER: Server Action ────────────────────────────────┐
-│ File: `src/actions/cancel/index.ts`                    │
-│ Function: `cancelAction()`                             │
-│ Does: auth check → call cancel lib → log metrics       │
+┌─ LAYER: API / Server Action ──────────────────────────┐
+│ File: `src/actions/create-order/index.ts`              │
+│ Function: `createOrderAction()`                        │
+│ Does: auth check → validate items → call service       │
 └────────────────────────────────┬───────────────────────┘
                                  │
                                  ▼
-┌─ LAYER: External API ─────────────────────────────────┐
-│ HTTP POST → Commerce Services /subscription/cancel     │
-│ Returns: { success: true, expiry: "2024-12-31" }       │
+┌─ LAYER: Service ──────────────────────────────────────┐
+│ File: `src/lib/orders/index.ts`                        │
+│ Function: `createOrder()`                              │
+│ Does: calculate total → charge payment → insert to DB  │
+└────────────────────────────────┬───────────────────────┘
+                                 │
+                                 ▼
+┌─ LAYER: Data ─────────────────────────────────────────┐
+│ Database: INSERT INTO orders (...)                      │
+│ Returns: { orderId: "abc-123", status: "confirmed" }   │
 └────────────────────────────────────────────────────────┘
 ```
 
