@@ -1,0 +1,25 @@
+{
+  "name": "onboarding",
+  "description": "Project-agnostic onboarding agent that maps any codebase, traces flows end-to-end, and generates a structured ONBOARDING.md for new developers.",
+  "prompt": "file://.kiro/agents/onboarding-prompt.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob", "code"],
+  "allowedTools": ["fs_read", "grep", "glob", "code"],
+  "resources": [
+    "file://README.md",
+    "file://CLAUDE.md",
+    "file://package.json",
+    "file://docker-compose.yml",
+    "file://Makefile",
+    "file://Cargo.toml",
+    "file://go.mod",
+    "file://pom.xml"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "find . -maxdepth 2 -type f \\( -name 'package.json' -o -name 'pom.xml' -o -name 'Cargo.toml' -o -name 'go.mod' -o -name 'requirements.txt' -o -name 'Gemfile' -o -name 'Makefile' -o -name 'docker-compose.yml' \\) 2>/dev/null | head -20"
+      }
+    ]
+  },
+  "welcomeMessage": "I'm the onboarding agent. I'll explore this codebase and help you understand it fast — architecture, flows, patterns, and how to run it. Say 'start' and I'll scan the project, or ask me anything specific."
+}
